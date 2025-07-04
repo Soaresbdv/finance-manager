@@ -2,14 +2,20 @@
 <html>
 
 <head>
-    <title>Finance Manager</title>
-    <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
-    <script src="js/app.js" defer></script>
+    <title>Registro</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+    <script src="app.js" defer></script>
 </head>
 
 <body>
     <div id="app">
-        <!-- Seu conteúdo Vue aqui -->
+        <h1>Registro</h1>
+        <form @submit.prevent="register">
+            <input v-model="email" type="email" placeholder="Email" required>
+            <input v-model="password" type="password" placeholder="Senha" required>
+            <button type="submit">Registrar</button>
+        </form>
+        <p v-if="message">{{ message }}</p>
     </div>
 </body>
 
