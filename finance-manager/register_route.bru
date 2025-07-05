@@ -1,0 +1,23 @@
+meta {
+  name: register_route
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:5000/api/transactions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: finance@123
+}
+
+body:json {
+  {
+      "description": "Salário",
+      "amount": 3500.00,
+      "type": "income"
+  }
+}

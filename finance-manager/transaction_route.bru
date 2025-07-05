@@ -1,0 +1,27 @@
+meta {
+  name: transaction_route
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:5000/api/transactions
+  body: json
+  auth: bearer
+}
+
+headers {
+  : 
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiZXhwIjoxNzUxNzM3NjgyfQ.KFFRQyzpEh4SqgsHvxqs3hou1esEM5DsJlXmppezbCE
+}
+
+body:json {
+  {
+      "description": "Salário",
+      "amount": 3500.00,
+      "type": "income"
+  }
+}
