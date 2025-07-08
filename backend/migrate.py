@@ -1,51 +1,69 @@
+# backend/migrate.py
 from db import get_db
+import sqlite3
+import os
 
-def table_exists(db, table_name):
-    """Verifica se uma tabela existe no banco de dados"""
-    cursor = db.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
-        (table_name,)
-    )
-    return cursor.fetchone() is not None
+def drop_tables(db):
+    """Remove tabelas existentes para recriação"""
+    db.execute("DROP TABLE IF EXISTS transactions")
+    db.execute("DROP TABLE IF EXISTS users")
+    print("Tabelas antigas removidas")
 
-def column_exists(db, table_name, column_name):
-    """Verifica se uma coluna existe em uma tabela"""
-    cursor = db.execute(f"PRAGMA table_info({table_name})")
-    columns = [info[1] for info in cursor.fetchall()]
-    return column_name in columns
+def create_tables(db):
+    """Cria todas as tabelas com estrutura correta"""
+    # Tabela users com ID autoincrementável
+    db.execute('''
+        CREATE TABLE users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            name TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Tabela transactions com chave estrangeira
+    db.execute('''
+        CREATE TABLE transactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            description TEXT NOT NULL,
+            amount REAL NOT NULL,
+            type TEXT NOT NULL CHECK(type IN ('income', 'expense')),
+            category TEXT NOT NULL,
+            date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ''')
+    
+    # Índices para melhor performance
+    db.execute('CREATE INDEX IF NOT EXISTS idx_user_id ON transactions(user_id)')
+    db.execute('CREATE INDEX IF NOT EXISTS idx_user_email ON users(email)')
+    
+    print("Tabelas criadas com sucesso")
 
 def migrate():
-    with get_db() as db:
-        try:
-            if not table_exists(db, 'transactions'):
-                db.execute('''
-                    CREATE TABLE transactions (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        user_id INTEGER NOT NULL,
-                        description TEXT NOT NULL,
-                        amount REAL NOT NULL,
-                        type TEXT NOT NULL CHECK(type IN ('income', 'expense')),
-                        category TEXT NOT NULL DEFAULT 'other',
-                        date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (user_id) REFERENCES users(id)
-                    )
-                ''')
-                print("Tabela 'transactions' criada com sucesso!")
-            else:
-                print("Tabela 'transactions' já existe. Verificando colunas...")
-                if not column_exists(db, 'transactions', 'category'):
-                    db.execute('''
-                        ALTER TABLE transactions 
-                        ADD COLUMN category TEXT NOT NULL DEFAULT 'other'
-                    ''')
-                    print("Coluna 'category' adicionada com sucesso!")
-                else:
-                    print("Coluna 'category' já existe.")
-                
+    try:
+        # Remove o arquivo do banco existente se quiser recriar do zero
+        if os.path.exists('finance.db'):
+            os.remove('finance.db')
+            print("Banco de dados antigo removido")
+            
+        with get_db() as db:
+            # Cria todas as tabelas
+            create_tables(db)
             db.commit()
             
-        except Exception as e:
-            print("Erro na migração:", str(e))
+            # Verificação
+            print("\nEstrutura verificada:")
+            print("Users:", db.execute("PRAGMA table_info(users)").fetchall())
+            print("Transactions:", db.execute("PRAGMA table_info(transactions)").fetchall())
+            
+        print("\nMigração concluída com sucesso!")
+        
+    except Exception as e:
+        print(f"Erro durante migração: {str(e)}")
+        if 'db' in locals():
             db.rollback()
 
 if __name__ == '__main__':

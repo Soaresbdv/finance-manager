@@ -34,34 +34,40 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         methods: {
             async login() {
-                try {
-                    this.resetMessages();
-                    const response = await fetch('/api/login', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            email: this.email,
-                            password: this.password
-                        })
-                    });
+    try {
+        this.resetMessages();
+        if (!this.email || !this.password) {
+            throw new Error('Email e senha são obrigatórios');
+        }
 
-                    const data = await response.json();
-                    
-                    if (!response.ok) throw new Error(data.error || 'Falha no login');
-
-                    localStorage.setItem('token', data.token);
-                    this.isAuthenticated = true;
-                    await this.fetchTransactions();
-                    this.email = '';
-                    this.password = '';
-
-                } catch (error) {
-                    this.errorMessage = error.message;
-                    console.error("Login error:", error);
-                }
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
             },
+            body: JSON.stringify({
+                email: this.email,
+                password: this.password
+            })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Credenciais inválidas');
+        }
+
+        localStorage.setItem('token', data.token);
+        this.isAuthenticated = true;
+        await this.fetchTransactions();
+        this.email = '';
+        this.password = '';
+
+    } catch (error) {
+        this.errorMessage = error.message;
+        console.error("Login error:", error);
+    }
+},
             async register() {
                 try {
                     this.resetMessages();
