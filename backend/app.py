@@ -1,19 +1,23 @@
-from flask import Flask, jsonify, send_from_directory  # Adicione send_from_directory aqui
-from auth import token_required, auth_bp
-from transactions import transactions_bp
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
+import os
 
+# Cria a instância do Flask primeiro
 app = Flask(__name__)
 CORS(app)
 
+# Configurações
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'financeteste@')
+
+# Importação dos blueprints (após criar o app)
+from auth import auth_bp
+from transactions import transactions_bp
+
+# Registro dos blueprints
 app.register_blueprint(auth_bp, url_prefix='/api')
 app.register_blueprint(transactions_bp, url_prefix='/api')
 
-@app.route('/api/validate-token', methods=['GET'])
-@token_required
-def validate_token():
-    return jsonify({"valid": True}), 200
-
+# Rotas estáticas para o frontend
 @app.route('/')
 def serve_frontend():
     return send_from_directory('../frontend', 'index.html')
