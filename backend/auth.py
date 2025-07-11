@@ -4,10 +4,9 @@ import jwt
 import datetime
 from database import get_db
 
-# Blueprint deve ser a primeira coisa definida no arquivo
 auth_bp = Blueprint('auth', __name__)
 
-SECRET_KEY = 'financeteste@'  # Use a mesma chave do app.py
+SECRET_KEY = 'financeteste@'
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -22,9 +21,8 @@ def register():
 def login():
     try:
         data = request.get_json()
-        # Sua lógica de login aqui
         token = jwt.encode({
-            'user_id': 1,  # Substitua pelo ID real do usuário
+            'user_id': 1,  
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
         }, SECRET_KEY)
         return jsonify({"token": token}), 200

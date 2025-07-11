@@ -1,4 +1,3 @@
-# Crie um arquivo check_db.py no backend/ com:
 from db import get_db
 
 with get_db() as db:
